@@ -1,11 +1,11 @@
 package com.betrybe.agrix.controllers;
 
-import com.betrybe.agrix.dto.CropDto;
-import com.betrybe.agrix.dto.DtoConverter;
-import com.betrybe.agrix.dto.FarmDto;
-import com.betrybe.agrix.entities.EntityFarm;
-import com.betrybe.agrix.services.CropService;
-import com.betrybe.agrix.services.FarmService;
+import com.betrybe.agrix.controllers.dto.CropDto;
+import com.betrybe.agrix.controllers.dto.FarmDto;
+import com.betrybe.agrix.controllers.dto.ModelDtoConverter;
+import com.betrybe.agrix.models.entities.FarmEntity;
+import com.betrybe.agrix.service.CropService;
+import com.betrybe.agrix.service.FarmService;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -25,10 +25,9 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping(value = "/farms")
 public class FarmControllers {
-  
   @Autowired
-  private FarmService farmService;
-  private CropService cropService;
+  private final FarmService farmService;
+  private final CropService cropService;
 
   @Autowired
   public FarmControllers(FarmService farmService, CropService cropService) {
@@ -37,70 +36,60 @@ public class FarmControllers {
   }
 
   /**
- * javadoc.
- */
-
-  @PostMapping()
-  public ResponseEntity<EntityFarm> createFarm(@RequestBody FarmDto newFarm) {
-    EntityFarm farm = DtoConverter.dtoToModel(newFarm);
-
-    EntityFarm newFarmInserted = farmService.insertFarm(newFarm.toFarm());
-    return ResponseEntity.status(HttpStatus.CREATED).body(newFarmInserted);
+   * javadoc.
+   */
+  @PostMapping
+  public ResponseEntity<FarmEntity> createFarm(@RequestBody FarmDto newFarm) {
+    FarmEntity farm = ModelDtoConverter.dtoToModel(newFarm);
+    return ResponseEntity.status(HttpStatus.CREATED).body(farmService.insertFarm(newFarm.toFarm()));
   }
 
   /**
- * javadoc.
- */
-  @GetMapping("/{id}")
-  public ResponseEntity<FarmDto> getFarmById(@PathVariable Long id) {
-    EntityFarm response = farmService.getFarmbyId(id);
-    return ResponseEntity.status(HttpStatus.OK).body(DtoConverter.modelToDto(response));
-  }
-
-  /**
- * javadoc.
- */
+   * javadoc.
+   */
   @GetMapping()
   public List<FarmDto> getAllFarms() {
-    List<EntityFarm> allFarms = farmService.getAllFarms();
-
+    List<FarmEntity> allFarms = farmService.getAllFarms();
     return allFarms.stream()
-    .map((farm) -> new FarmDto(
-      farm.getId(),
-      farm.getName(),
-      farm.getSize()))
-      .collect(Collectors.toList());
+        .map((farm) -> new FarmDto(farm.getId(), farm.getName(), farm.getSize()))
+        .collect(Collectors.toList());
   }
 
   /**
- * javadoc.
- */
+   * javadoc.
+   */
+  @GetMapping("/{id}")
+  public ResponseEntity<FarmDto> getFarmById(@PathVariable Long id) {
+    FarmEntity response = farmService.getFarmById(id);
+    return ResponseEntity.status(HttpStatus.OK).body(ModelDtoConverter.modelToDto(response));
+  }
 
+  /**
+   * javadoc.
+   */
+  @GetMapping("/{farmId}/crops")
+  public ResponseEntity<?> getCropById(@PathVariable Long farmId) {
+    Optional<FarmEntity> farm = Optional.ofNullable(farmService.getFarmById(farmId));
+    if (farm.isPresent()) {
+      return ResponseEntity.status(HttpStatus.OK).body(cropService.getCropsByFarmId(farmId));
+    }
+    return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Fazenda não encontrada!");
+  }
+
+  /**
+   * javadoc.
+   */
   @PostMapping("/{farmId}/crops")
   public ResponseEntity<?> insertCrop(@PathVariable Long farmId, @RequestBody CropDto cropDto) {
-
-
-    EntityFarm farmById = farmService.getFarmbyId(farmId);
-    Optional<EntityFarm> optionalFarm = Optional.ofNullable(farmById);
+    FarmEntity farm = farmService.getFarmById(farmId);
+    Optional<FarmEntity> optionalFarm = Optional.ofNullable(farmService.getFarmById(farmId));
 
     if (optionalFarm.isEmpty()) {
       return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Fazenda não encontrada!");
     }
 
     return ResponseEntity.status(HttpStatus.CREATED)
-      .body(cropService.insertCrop(cropDto, optionalFarm.get()));
+        .body(cropService.insertOneCrop(cropDto, optionalFarm.get()));
   }
 
-  /**
-  * javadoc.
-  */
-
-  @GetMapping("/{farmId}/crops")
-  public ResponseEntity<?> getCropById(@PathVariable Long farmId) {
-    Optional<EntityFarm> farm = Optional.ofNullable(farmService.getFarmbyId(farmId));
-    if (farm.isPresent()) {
-      return ResponseEntity.status(HttpStatus.OK).body(cropService.getCropsByFarmId(farmId));
-    }
-    return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Fazenda não encontrada!");
-  }
 }

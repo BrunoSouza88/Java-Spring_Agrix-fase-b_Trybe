@@ -1,4 +1,4 @@
-package com.betrybe.agrix.entities;
+package com.betrybe.agrix.models.entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.CascadeType;
@@ -15,10 +15,10 @@ import java.util.List;
  */
 @Entity
 @Table(name = "farms")
-public class EntityFarm {
-  @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
+public class FarmEntity {
 
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  @Id
   private Long id;
 
   private String name;
@@ -27,52 +27,51 @@ public class EntityFarm {
 
   @OneToMany(mappedBy = "farmId", cascade = CascadeType.ALL)
   @JsonIgnore
-  private List<EntityCrop> crops;
-
-  public EntityFarm() {}
+  private List<CropEntity> crops;
 
   /**
- * javadoc.
- */
-  public EntityFarm(Long id, String name, Double size, List<EntityCrop> crops) {
+   * javadoc.
+   */
+  public FarmEntity(Long id, String name, Double size, List<CropEntity> crops) {
     this.id = id;
-
     this.name = name;
-
     this.size = size;
+    this.crops = crops;
+  }
 
+  public FarmEntity() {
+  }
+
+  public List<CropEntity> getCrops() {
+    return crops;
+  }
+
+  public void setCrops(List<CropEntity> crops) {
     this.crops = crops;
   }
 
   public Long getId() {
-    return this.id;
+    return id;
   }
 
-  public void setId(Long newId) {
-    this.id = newId;
+  public void setId(Long id) {
+    this.id = id;
   }
 
   public String getName() {
-    return this.name;
+    return name;
   }
 
-  public void setName(String newName) {
-    this.name = newName;
+  public void setName(String name) {
+    this.name = name;
   }
 
   public Double getSize() {
-    return this.size;
+    return size;
   }
 
-  public void setSize(Double newSize) {
-    this.size = newSize;
+  public void setSize(Double size) {
+    this.size = size;
   }
 
-  public List<EntityCrop> getCrops() {
-    return this.crops;
-  }
-
-  public void setCrops(List<EntityCrop> newCrops) {
-    this.crops = newCrops;
-  }
 }
